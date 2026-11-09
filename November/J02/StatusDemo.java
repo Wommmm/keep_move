@@ -10,10 +10,28 @@ public class StatusDemo {
         return "success".equals(status);
     }
 
+    static class TaskReport{
+        int total;
+        int failedCount;
+        List<TaskResult> failedTasks;
+
+        TaskReport(int total,int failedCount,List<TaskResult> failedTasks){
+            this.total = total;
+            this.failedCount = failedCount;
+            this.failedTasks = failedTasks;
+        }
+        static TaskReport buildReport(List<TaskResult> tasks){ 
+             // 调用 selectFailedTasks(tasks)，取得未成功任务列表。
+             List<TaskResult> failedTasks = selectFailedTasks(tasks);
+             int failedCount = failedTasks.size();
+              // 创建并返回 TaskReport 对象。
+              return new TaskReport(tasks.size(),failedCount,failedTasks);
+        }
+    }
+
     // 练习：success、error、timeout 返回 true，其余返回 false。
     static boolean isValidStatus(String status) {
-        return "success".equals(status) || "error".equals(status) || "timeout".equals(status);
-        
+        return TaskResult.isValidStatus(status);
     }
 
     static String describeStatus(String status)
@@ -58,18 +76,32 @@ public class StatusDemo {
         }
         return counts;
     }
+    static List<TaskResult> selectFailedTasks(List<TaskResult> tasks){
+        List<TaskResult> selected = new ArrayList<>();
+        for (TaskResult task : tasks){
+            if (task.isFailure()){
+                selected.add(task);
+            }
+        }
+        return selected;
+    }
+
+    static void printReport(TaskReport report){
+        System.out.println("总任务数：" + report.total);
+        System.out.println("未成功数：" + report.failedCount);
+         // 遍历 report.failedTasks，打印每个任务的 ID 和状态。
+        for (TaskResult task : report.failedTasks){
+            System.out.println(task.getId() + "：" + task.getStatus());
+        }
+    }
 
     public static void main(String[] args) {
-            String[] statuses = {
-        "success", "error", "timeout", "success", "error"
-    };
-        System.out.println("未成功数量：" + countFailures(statuses));
-        System.out.println("未成功状态：" + selectFailures(statuses));
-        System.out.println("成功判断：" + isSuccess("success"));
-        System.out.println("success 合法：" + isValidStatus("success"));
-        System.out.println("error 合法：" + isValidStatus("error"));
-        System.out.println("timeout 合法：" + isValidStatus("timeout"));
-        System.out.println("unknown 合法：" + isValidStatus("unknown"));
-        System.out.println(describeStatus("success"));
+        List<TaskResult> tasks = List.of(
+            new TaskResult("A", "success"),
+            new TaskResult("B", "error"),
+            new TaskResult("C", "timeout")
+        );
+        TaskReport report = TaskReport.buildReport(tasks);
+        printReport(report);
     }
 }
